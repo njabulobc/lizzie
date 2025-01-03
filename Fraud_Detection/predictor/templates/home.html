@@ -1,0 +1,63 @@
+<!-- predictor/templates/home.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="main-content">
+        <h2>Welcome, {{ user.username }}</h2>
+        <h3>Transactions</h3>
+        <table>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Merchant</th>
+                <th>Amount</th>
+                <th>Is Fraud</th>
+                <th>Processed At</th>
+            </tr>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.transaction_id }}</td>
+                <td>{{ transaction.merchant }}</td>
+                <td>{{ transaction.amt }}</td>
+                <td>{{ transaction.is_fraud }}</td>
+                <td>{{ transaction.processed_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="sidebar">
+        <h3>Suspicious Transactions Detected</h3>
+        <table>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Merchant</th>
+                <th>Amount</th>
+                <th>Processed At</th>
+            </tr>
+            {% for transaction in transactions %}
+                {% if transaction.is_fraud %}
+                <tr>
+                    <td>{{ transaction.transaction_id }}</td>
+                    <td>{{ transaction.merchant }}</td>
+                    <td>{{ transaction.amt }}</td>
+                    <td>{{ transaction.processed_at }}</td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+        <h3>Fraud Transactions by Region</h3>
+        <table>
+            <tr>
+                <th>Region</th>
+                <th>Number of Fraud Transactions</th>
+            </tr>
+            {% for item in fraud_by_region %}
+            <tr>
+                <td>{{ item.province }}</td>
+                <td>{{ item.count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

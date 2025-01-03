@@ -1,0 +1,163 @@
+<!-- templates/base.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elizabank Fraud Detection</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+
+    .wrapper {
+        display: flex;
+        width: 100%;
+        align-items: stretch;
+    }
+    #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;    
+        min-width: 250px;
+        max-width: 250px;
+        min-height: 100vh;
+        background: #032346;
+        color: #fff;
+        transition: all 0.3s;
+        z-index: 1000;
+    }
+
+    #sidebar.active {
+        min-width: 80px;
+        max-width: 80px;
+    }
+
+    #sidebar.active .nav-link span {
+        display: none;
+    }
+
+    #sidebar.active .nav-link {
+        text-align: center;
+        padding: 15px 0;
+    }
+
+    #sidebar.active .nav-link i {
+        margin: 0;
+        font-size: 1.3em;
+    }
+
+    .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        transition: all 0.3s;
+    }
+
+    .sidebar-header h3 {
+        display: block;
+        transition: all 0.3s;
+    }
+
+/* Main content area */
+    #content {
+        width: calc(100% - 250px);
+        margin-left: 250px;
+        min-height: 100vh;
+        transition: all 0.3s;
+    }
+
+    #content.active {
+        width: calc(100% - 80px);
+        margin-left: 80px;
+
+    #sidebar.active .sidebar-header h3 {
+        display: none;
+    }
+</style>
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Elizabank</h3>
+                <button type="button" id="sidebarCollapse" class="btn" style="color: #fff;">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}" data-toggle="tooltip" data-placement="right" title="Home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}" data-toggle="tooltip" data-placement="right" title="Dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}" data-toggle="tooltip" data-placement="right" title="About">
+                        <i class="fas fa-info-circle"></i> 
+                        <span>About</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'contact' %}" data-toggle="tooltip" data-placement="right" title="Contact">
+                        <i class="fas fa-envelope"></i> 
+                        <span>Contact</span>
+                    </a>
+                </li>
+            </ul>    
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}" data-toggle="tooltip" data-placement="right" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span>Logout</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}" data-toggle="tooltip" data-placement="right" title="Login">
+                        <i class="fas fa-sign-in-alt"></i> 
+                        <span>Login</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    <!-- Page Content -->
+    <div id="content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Initialize tooltips in JavaScript block -->
+    <script>
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+            $('[data-toggle="tooltip"]').tooltip('dispose');
+            if ($('#sidebar').hasClass('active')) {
+                $('[data-toggle="tooltip"]').tooltip('enable');
+            }
+        });
+        
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover',
+            delay: { show: 100, hide: 100 }
+        });
+    });
+    </script>
+    {% block javascript %}
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Transaction Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5>Transaction ID: {{ transaction.transaction_id }}</h5>
+            <p>Amount: ${{ transaction.amt }}</p>
+            <p>Merchant: {{ transaction.merchant }}</p>
+            <p>Category: {{ transaction.category }}</p>
+            <p>Location: {{ transaction.city }}, {{ transaction.province }}</p>
+            <p>Status: {% if transaction.is_fraud %}
+                <span class="badge bg-danger">Fraudulent</span>
+                {% else %}
+                <span class="badge bg-success">Legitimate</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

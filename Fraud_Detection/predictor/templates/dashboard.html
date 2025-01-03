@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Analytics Dashboard</h2>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Transactions</h5>
+                    <h2>{{ total_transactions }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Fraudulent Transactions</h5>
+                    <h2>{{ fraud_count }}</h2>
+                    <small>{{ fraud_percentage|floatformat:2 }}% of total</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Transaction Statistics</h5>
+                    <canvas id="transactionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Category Distribution</h5>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Transaction Statistics Chart
+    const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+    new Chart(transactionCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Valid', 'Fraudulent'],
+            datasets: [{
+                data: [{{ total_transactions|sub:fraud_count }}, {{ fraud_count }}],
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+        }
+    });
+
+    // Category Distribution Chart
+    const categoryData = {{ transaction_by_category|safe }};
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+                label: 'Transactions by Category',
+                data: Object.values(categoryData),
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
