@@ -1,21 +1,71 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_heading %}Transaction Detail{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Transaction Details</h2>
-    <div class="card">
-        <div class="card-body">
-            <h5>Transaction ID: {{ transaction.transaction_id }}</h5>
-            <p>Amount: ${{ transaction.amt }}</p>
-            <p>Merchant: {{ transaction.merchant }}</p>
-            <p>Category: {{ transaction.category }}</p>
-            <p>Location: {{ transaction.city }}, {{ transaction.province }}</p>
-            <p>Status: {% if transaction.is_fraud %}
-                <span class="badge bg-danger">Fraudulent</span>
-                {% else %}
-                <span class="badge bg-success">Legitimate</span>
-                {% endif %}
-            </p>
-        </div>
-    </div>
+<div class="mx-auto max-w-3xl space-y-6">
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/50">
+        <header class="flex items-start justify-between">
+            <div>
+                <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Transaction</p>
+                <h2 class="mt-2 text-2xl font-semibold text-white">#{{ transaction.transaction_id }}</h2>
+            </div>
+            {% if transaction.is_fraud %}
+            <span class="inline-flex items-center gap-2 rounded-full border border-rose-500/60 bg-rose-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-rose-200">
+                <span class="h-2 w-2 rounded-full bg-rose-400"></span> Fraud Alert
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-emerald-200">
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span> Cleared
+            </span>
+            {% endif %}
+        </header>
+
+        <dl class="mt-8 grid gap-6 sm:grid-cols-2">
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Merchant</dt>
+                <dd class="mt-2 text-lg font-semibold text-slate-100">{{ transaction.merchant }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Category</dt>
+                <dd class="mt-2 text-lg text-slate-200">{{ transaction.category }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Amount</dt>
+                <dd class="mt-2 text-lg font-semibold text-slate-100">{{ transaction.amt|currency }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Processed</dt>
+                <dd class="mt-2 text-lg text-slate-200">{{ transaction.processed_at|date:"M d, Y H:i" }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Customer demographics</dt>
+                <dd class="mt-2 text-lg text-slate-200">{{ transaction.gender }} · {{ transaction.job }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-slate-400">Geo coordinates</dt>
+                <dd class="mt-2 text-lg text-slate-200">{{ transaction.city }}, {{ transaction.province }} ({{ transaction.latitude }}, {{ transaction.longitude }})</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-inner shadow-slate-950/60">
+        <h3 class="text-lg font-semibold text-white">Investigation checklist</h3>
+        <ul class="mt-4 space-y-3 text-sm text-slate-300">
+            <li class="flex gap-3">
+                <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                Validate merchant legitimacy and compare with historic customer spending patterns.
+            </li>
+            <li class="flex gap-3">
+                <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-blue-400"></span>
+                Confirm cardholder location using device or IP telemetry for mismatched geodata.
+            </li>
+            <li class="flex gap-3">
+                <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-rose-400"></span>
+                Escalate to the risk operations team if two or more linked alerts are detected within 24 hours.
+            </li>
+        </ul>
+    </section>
 </div>
 {% endblock %}

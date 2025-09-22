@@ -1,26 +1,68 @@
 {% extends "base.html" %}
 
+{% block page_heading %}Connect with us{% endblock %}
+
 {% block content %}
-<header>
-    <h1>Contact Us</h1>
-</header>
-<main>
-    <section>
-        <h2>Our Address</h2>
-        <p>5 College Road, Vainona, Harare, Zimbabwe</p>
+<div class="grid gap-8 lg:grid-cols-2">
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/40">
+        <h2 class="text-2xl font-semibold text-white">Head office</h2>
+        <p class="mt-2 text-sm text-slate-400">Visit or reach out to our command centre for fraud, risk, and customer support.</p>
+
+        <div class="mt-8 space-y-6 text-sm text-slate-300">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Address</p>
+                <p class="mt-2">5 College Road, Vainona<br>Harare, Zimbabwe</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Email</p>
+                <a class="mt-2 inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200" href="mailto:support@elizabank.com">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 8l9 6 9-6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z" />
+                    </svg>
+                    support@elizabank.com
+                </a>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Phone</p>
+                <p class="mt-2">Mobile: <a class="text-emerald-300 hover:text-emerald-200" href="tel:+263773456789">+263 773 456 789</a><br>Landline: <a class="text-emerald-300 hover:text-emerald-200" href="tel:+263242123456">+263 242 123 456</a></p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Digital</p>
+                <a class="mt-2 inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200" href="https://www.elizabank.com" target="_blank" rel="noopener">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Zm9-9c2.485 0 4.5 4.03 4.5 9s-2.015 9-4.5 9-4.5-4.03-4.5-9 2.015-9 4.5-9Zm0 0v18" />
+                    </svg>
+                    www.elizabank.com
+                </a>
+            </div>
+        </div>
     </section>
-    <section>
-        <h2>Email Us</h2>
-        <p>Email: <a href="mailto:support@elizabank.com">support@elizabank.com</a></p>
+
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-8 shadow-inner shadow-slate-950/60">
+        <h3 class="text-lg font-semibold text-white">Rapid response request</h3>
+        <p class="mt-2 text-sm text-slate-400">Share details about a potential incident so our fraud desk can triage quickly.</p>
+        <form class="mt-6 space-y-5">
+            <div>
+                <label class="text-sm font-medium text-slate-300" for="contact-name">Your name</label>
+                <input id="contact-name" type="text" placeholder="Full name" class="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-200 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-slate-300" for="contact-email">Email</label>
+                <input id="contact-email" type="email" placeholder="name@company.com" class="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-200 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-slate-300" for="contact-message">Message</label>
+                <textarea id="contact-message" rows="4" placeholder="Share any context or transaction IDs" class="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-200 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"></textarea>
+            </div>
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8m-18 8h18" />
+                </svg>
+                Submit request
+            </button>
+            <p class="text-xs text-slate-500">We aim to respond within 2 business hours for escalated fraud notices.</p>
+        </form>
     </section>
-    <section>
-        <h2>Call Us</h2>
-        <p>Phone: +263 773 456 789</p>
-        <p>Landline: +263 242 123 456</p>
-    </section>
-    <section>
-        <h2>Visit Our Website</h2>
-        <p><a href="https://www.elizabank.com" target="_blank">www.elizabank.com</a></p>
-    </section>
-</main>
+</div>
 {% endblock %}

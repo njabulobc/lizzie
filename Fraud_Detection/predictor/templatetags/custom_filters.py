@@ -25,3 +25,12 @@ def percentage(value, arg):
         return (value / arg) * 100
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
+
+
+@register.filter
+def currency(value):
+    """Format numeric value as currency."""
+    try:
+        return f"${float(value):,.2f}"
+    except (ValueError, TypeError):
+        return value

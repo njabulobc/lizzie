@@ -1,37 +1,68 @@
 {% extends "base.html" %}
 
+{% block page_heading %}About Elizabank{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>About Elizabank</h1>
-    
-    <section id="history">
-        <h2>Our History</h2>
-        <p>Elizabank was founded in 2024 with the mission to provide exceptional banking 
-            services to our community. Over the years, we have grown to become a trusted financial 
-            institution with a strong commitment to customer satisfaction.
-            We have a strong focus on innovation and are constantly looking for new ways to improve
-            our services. Being a leader in the financial industry, we are dedicated to ensuring compliance
-            with all regulations and providing a safe and secure environment for our customers.
+<div class="space-y-10">
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/40">
+        <h2 class="text-3xl font-semibold text-white">Our mission</h2>
+        <p class="mt-4 text-sm text-slate-300 leading-relaxed">
+            Elizabank delivers secure digital-first banking experiences across Zimbabwe and the broader SADC region. Our fraud
+            intelligence platform empowers analysts with real-time insights so customers can transact confidently. We combine
+            world-class data science with a customer-first philosophy to stop fraud before it impacts our communities.
         </p>
-        <img src="https://via.placeholder.com/600x400" alt="Bank History">
+        <div class="mt-8 grid gap-6 lg:grid-cols-3">
+            <article class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-6">
+                <h3 class="text-lg font-semibold text-white">History</h3>
+                <p class="mt-3 text-sm text-slate-400">Founded in 2024, Elizabank has grown from a boutique lender into a regional digital bank delivering inclusive services to individuals and businesses.</p>
+            </article>
+            <article class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-6">
+                <h3 class="text-lg font-semibold text-white">Innovation</h3>
+                <p class="mt-3 text-sm text-slate-400">We invest heavily in AI, behavioural analytics, and automation to ensure suspicious patterns are surfaced instantly for human review.</p>
+            </article>
+            <article class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-6">
+                <h3 class="text-lg font-semibold text-white">Community</h3>
+                <p class="mt-3 text-sm text-slate-400">From financial literacy programs to SME workshops, our outreach is centred on helping customers bank safely and responsibly.</p>
+            </article>
+        </div>
     </section>
-    
-    <section id="management">
-        <h2>Our Management</h2>
-        <p>Our management team is composed of experienced professionals dedicated to leading Elizabank towards a prosperous future.</p>
-        <img src="https://via.placeholder.com/600x400" alt="Management Team">
-    </section>
-    
-    <section id="services">
-        <h2>Services Offered</h2>
-        <ul>
-            <li>Personal Banking</li>
-            <li>Business Banking</li>
-            <li>Loans and Mortgages</li>
-            <li>Investment Services</li>
-            <li>Online Banking</li>
-        </ul>
-        <img src="https://via.placeholder.com/600x400" alt="Bank Services">
+
+    <section class="grid gap-6 lg:grid-cols-2">
+        <article class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-xl shadow-slate-950/50">
+            <h3 class="text-2xl font-semibold text-white">Leadership principles</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                    Maintain radical transparency with regulators, partners, and customers.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-blue-400"></span>
+                    Design experiences that are accessible, intuitive, and empathetic.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-rose-400"></span>
+                    Champion diversity within our teams to produce resilient outcomes.
+                </li>
+            </ul>
+        </article>
+
+        <article class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-xl shadow-slate-950/50">
+            <h3 class="text-2xl font-semibold text-white">What we offer</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+                <li class="flex items-start gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                    Personal and business banking tailored for digital lifestyles.
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-indigo-400"></span>
+                    Lending solutions that respond to customer data in near-real time.
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-amber-400"></span>
+                    Secure mobile and web banking experiences with proactive fraud monitoring.
+                </li>
+            </ul>
+        </article>
     </section>
 </div>
 {% endblock %}

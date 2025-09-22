@@ -1,27 +1,121 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_heading %}Analyst Profile{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>User Profile</h2>
-    <div class="row">
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Personal Information</h5>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" class="form-control" value="{{ user.username }}" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" class="form-control" value="{{ user.email }}">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
-                    </form>
+<div class="space-y-8">
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/50">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-300">
+                    <span class="text-2xl font-semibold uppercase">{{ user.username|first|default:"A" }}</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-white">{{ user.get_full_name|default:user.username }}</h2>
+                    <p class="text-sm text-slate-400">{{ user.email|default:"No email on file" }}</p>
                 </div>
             </div>
+            <a href="{% url 'logout' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M15 3h4.5A1.5 1.5 0 0 1 21 4.5v15a1.5 1.5 0 0 1-1.5 1.5H15" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m10.5 17.25 3.75-3.75-3.75-3.75" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M14.25 13.5H3" />
+                </svg>
+                Sign out
+            </a>
         </div>
-    </div>
+
+        <form method="post" class="mt-8 grid gap-6 lg:grid-cols-2">
+            {% csrf_token %}
+            <div>
+                <label class="text-sm font-medium text-slate-300">Username</label>
+                <input type="text" value="{{ user.username }}" readonly class="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-200 shadow-inner shadow-slate-950/60">
+            </div>
+            <div>
+                <label class="text-sm font-medium text-slate-300">Email</label>
+                <input type="email" value="{{ user.email }}" placeholder="Add a contact email" class="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-200 shadow-inner shadow-slate-950/60">
+            </div>
+            <div class="lg:col-span-2">
+                <label class="text-sm font-medium text-slate-300">Notification preferences</label>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label class="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-300">
+                        <input type="checkbox" checked class="mt-1 h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-400 focus:ring-emerald-400" disabled>
+                        Real-time fraud alert emails
+                    </label>
+                    <label class="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-300">
+                        <input type="checkbox" checked class="mt-1 h-4 w-4 rounded border-slate-700 bg-slate-900 text-emerald-400 focus:ring-emerald-400" disabled>
+                        Weekly performance digest
+                    </label>
+                </div>
+            </div>
+            <div class="lg:col-span-2">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save preferences
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-xl shadow-slate-950/50">
+        <h3 class="text-lg font-semibold text-white">Operational footprint</h3>
+        <p class="text-sm text-slate-400">How your team is interacting with the detection platform.</p>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5">
+                <p class="text-xs font-medium uppercase tracking-[0.25em] text-slate-500">Transactions Reviewed</p>
+                <p class="mt-3 text-2xl font-semibold text-white">{{ total_transactions }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5">
+                <p class="text-xs font-medium uppercase tracking-[0.25em] text-slate-500">Fraud Cases</p>
+                <p class="mt-3 text-2xl font-semibold text-white">{{ fraud_transaction_count }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5">
+                <p class="text-xs font-medium uppercase tracking-[0.25em] text-slate-500">Total Volume</p>
+                <p class="mt-3 text-2xl font-semibold text-white">{{ total_amount|currency }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5">
+                <p class="text-xs font-medium uppercase tracking-[0.25em] text-slate-500">Fraud Exposure</p>
+                <p class="mt-3 text-2xl font-semibold text-white">{{ fraud_amount|currency }}</p>
+            </div>
+        </div>
+
+        <div class="mt-8 overflow-hidden rounded-2xl border border-slate-800/60">
+            <table class="min-w-full divide-y divide-slate-800/70 text-sm">
+                <thead class="bg-slate-900/80 text-left text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    <tr>
+                        <th class="px-4 py-3">Transaction</th>
+                        <th class="px-4 py-3">Merchant</th>
+                        <th class="px-4 py-3">Amount</th>
+                        <th class="px-4 py-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% if recent_transactions %}
+                        {% for transaction in recent_transactions %}
+                        <tr class="hover:bg-slate-900/60 transition">
+                            <td class="px-4 py-3 text-slate-200">#{{ transaction.transaction_id }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ transaction.merchant }}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-100">{{ transaction.amt|currency }}</td>
+                            <td class="px-4 py-3">
+                                {% if transaction.is_fraud %}
+                                <span class="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-rose-300">Fraud</span>
+                                {% else %}
+                                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-300">Clear</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-6 text-center text-sm text-slate-400">No recent transactions available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}

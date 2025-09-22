@@ -1,63 +1,208 @@
-<!-- predictor/templates/home.html -->
 {% extends "base.html" %}
+{% load custom_filters %}
+
+{% block page_heading %}Intelligence Overview{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="main-content">
-        <h2>Welcome, {{ user.username }}</h2>
-        <h3>Transactions</h3>
-        <table>
-            <tr>
-                <th>Transaction ID</th>
-                <th>Merchant</th>
-                <th>Amount</th>
-                <th>Is Fraud</th>
-                <th>Processed At</th>
-            </tr>
-            {% for transaction in transactions %}
-            <tr>
-                <td>{{ transaction.transaction_id }}</td>
-                <td>{{ transaction.merchant }}</td>
-                <td>{{ transaction.amt }}</td>
-                <td>{{ transaction.is_fraud }}</td>
-                <td>{{ transaction.processed_at }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div class="sidebar">
-        <h3>Suspicious Transactions Detected</h3>
-        <table>
-            <tr>
-                <th>Transaction ID</th>
-                <th>Merchant</th>
-                <th>Amount</th>
-                <th>Processed At</th>
-            </tr>
-            {% for transaction in transactions %}
-                {% if transaction.is_fraud %}
-                <tr>
-                    <td>{{ transaction.transaction_id }}</td>
-                    <td>{{ transaction.merchant }}</td>
-                    <td>{{ transaction.amt }}</td>
-                    <td>{{ transaction.processed_at }}</td>
-                </tr>
+<div class="space-y-10" data-fraud-coordinates='{{ fraud_transactions_json|safe }}'>
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-lg shadow-slate-900/30">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-400">Total Transactions</p>
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />
+                    </svg>
+                </span>
+            </div>
+            <p class="mt-5 text-3xl font-semibold text-white">{{ total_transactions }}</p>
+            <p class="mt-2 text-sm text-slate-400">{{ total_amount|currency }} processed</p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-lg shadow-rose-900/20">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-400">Flagged Transactions</p>
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 9v4m0 4h.01M4.293 17.293 12 3l7.707 14.293A1 1 0 0 1 18.804 19H5.196a1 1 0 0 1-.903-1.707Z" />
+                    </svg>
+                </span>
+            </div>
+            <p class="mt-5 text-3xl font-semibold text-white">{{ fraud_count }}</p>
+            <p class="mt-2 text-sm text-slate-400">{{ fraud_percentage|floatformat:2 }}% of all activity</p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-lg shadow-blue-900/20">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-400">Cleared Transactions</p>
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                </span>
+            </div>
+            <p class="mt-5 text-3xl font-semibold text-white">{{ legit_count }}</p>
+            <p class="mt-2 text-sm text-slate-400">Average value {{ avg_amount|currency }}</p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-lg shadow-orange-900/20">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-400">Loss Exposure</p>
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 3v18m0 0c-4.97 0-9-4.03-9-9s4.03-9 9-9m0 18c4.97 0 9-4.03 9-9s-4.03-9-9-9" />
+                    </svg>
+                </span>
+            </div>
+            <p class="mt-5 text-3xl font-semibold text-white">{{ fraud_amount|currency }}</p>
+            <p class="mt-2 text-sm text-slate-400">Value tied to suspicious activity</p>
+        </article>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/50">
+            <header class="flex items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold text-white">Recent Activity</h2>
+                    <p class="text-sm text-slate-400">Live stream of the latest processed transactions</p>
+                </div>
+                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">{{ recent_transactions|length }} records</span>
+            </header>
+            <div class="mt-5 overflow-hidden rounded-2xl border border-slate-800/80">
+                <div class="max-h-[420px] overflow-y-auto">
+                    <table class="min-w-full divide-y divide-slate-800/80">
+                        <thead class="bg-slate-900/90 text-left text-xs font-semibold uppercase tracking-widest text-slate-400">
+                            <tr>
+                                <th class="px-4 py-3">Transaction</th>
+                                <th class="px-4 py-3">Merchant</th>
+                                <th class="px-4 py-3">Amount</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Processed</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-sm">
+                            {% if recent_transactions %}
+                                {% for transaction in recent_transactions %}
+                                <tr class="hover:bg-slate-900/60 transition">
+                                    <td class="px-4 py-3 font-medium text-slate-100">#{{ transaction.transaction_id }}</td>
+                                    <td class="px-4 py-3 text-slate-300">{{ transaction.merchant }}</td>
+                                    <td class="px-4 py-3 font-semibold text-slate-100">{{ transaction.amt|currency }}</td>
+                                    <td class="px-4 py-3">
+                                        {% if transaction.is_fraud %}
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300">
+                                            <span class="h-2 w-2 rounded-full bg-rose-400"></span> Fraud
+                                        </span>
+                                        {% else %}
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                                            <span class="h-2 w-2 rounded-full bg-emerald-400"></span> Clear
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 text-slate-400">{{ transaction.processed_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500">No transactions available yet.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/40">
+                <h2 class="text-lg font-semibold text-white">Active Fraud Alerts</h2>
+                <p class="text-sm text-slate-400">Focused list of the most recent suspicious activity</p>
+                <div class="mt-5 space-y-4">
+                    {% if recent_fraud %}
+                        {% for fraud in recent_fraud %}
+                        <article class="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold text-rose-200">#{{ fraud.transaction_id }} · {{ fraud.merchant }}</p>
+                                    <p class="text-xs uppercase tracking-wider text-rose-300/80">{{ fraud.category }}</p>
+                                </div>
+                                <span class="text-sm font-semibold text-rose-100">{{ fraud.amt|currency }}</span>
+                            </div>
+                            <p class="mt-3 text-xs text-rose-200/80">{{ fraud.city }}, {{ fraud.province }} · {{ fraud.processed_at|date:"M d, Y H:i" }}</p>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-6 text-sm text-slate-400">No recent fraud alerts. All clear.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/40">
+                <h2 class="text-lg font-semibold text-white">Top Merchants</h2>
+                <p class="text-sm text-slate-400">Vendors with the highest interaction volume</p>
+                <div class="mt-5 space-y-4 text-sm">
+                    {% if top_merchants %}
+                        {% for merchant in top_merchants %}
+                        <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-800/60 bg-slate-900/80 px-4 py-3">
+                            <div>
+                                <p class="font-semibold text-slate-100">{{ merchant.merchant }}</p>
+                                <p class="text-xs text-slate-500">{{ merchant.transaction_count }} transactions</p>
+                            </div>
+                            <span class="font-semibold text-emerald-200">{{ merchant.total_spend|currency }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-6 text-sm text-slate-400">Insufficient data to surface merchant performance.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/40">
+            <h2 class="text-lg font-semibold text-white">Fraud Heatmap by Province</h2>
+            <p class="text-sm text-slate-400">Volume of flagged events by geographic region</p>
+            <div class="mt-6 space-y-4">
+                {% if fraud_by_region %}
+                    {% for item in fraud_by_region %}
+                    <div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="font-medium text-slate-200">{{ item.province }}</span>
+                            <span class="text-slate-400">{{ item.count }} cases</span>
+                        </div>
+                        <div class="mt-2 h-2 rounded-full bg-slate-800">
+                            <div class="h-2 rounded-full bg-rose-400/80" style="width: {{ item.count|percentage:max_fraud_region_count|floatformat:0 }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-6 text-sm text-slate-400">No geographic anomalies detected.</p>
                 {% endif %}
-            {% endfor %}
-        </table>
-        <h3>Fraud Transactions by Region</h3>
-        <table>
-            <tr>
-                <th>Region</th>
-                <th>Number of Fraud Transactions</th>
-            </tr>
-            {% for item in fraud_by_region %}
-            <tr>
-                <td>{{ item.province }}</td>
-                <td>{{ item.count }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
+            </div>
+        </div>
+
+        <div class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/40">
+            <h2 class="text-lg font-semibold text-white">Operational Guidance</h2>
+            <p class="text-sm text-slate-400">Best practices to help analysts focus their review</p>
+            <ul class="mt-6 space-y-4 text-sm text-slate-300">
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                    Prioritize merchants appearing in the alert list and cross-reference with historical dispute data.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-blue-400"></span>
+                    Investigate provinces displaying above-average heatmap intensity for coordinated activity.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-rose-400"></span>
+                    Validate high-value alerts manually before escalation to minimize customer friction.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-amber-400"></span>
+                    Schedule model retraining when alert ratios exceed 8% of total activity over a 7-day period.
+                </li>
+            </ul>
+        </div>
+    </section>
 </div>
 {% endblock %}
