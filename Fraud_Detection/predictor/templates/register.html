@@ -1,12 +1,60 @@
-<!-- predictor/templates/register.html -->
 {% extends "base.html" %}
 
+{% block page_heading %}Request Analyst Access{% endblock %}
+
 {% block content %}
-    <h2>Register</h2>
-    <form method="post"></form>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Register">
-    </form>
-    <a href="{% url 'login' %}">Already have an account? Login here.</a>
+<div class="mx-auto max-w-4xl">
+    <div class="grid gap-8 lg:grid-cols-2">
+        <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/40">
+            <h2 class="text-2xl font-semibold text-white">Create your credentials</h2>
+            <p class="mt-2 text-sm text-slate-400">Provision a secure profile to access Elizabank's fraud intelligence suite.</p>
+
+            <form method="post" class="mt-8 space-y-5">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="rounded-2xl border border-rose-500/50 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                    {{ form.non_field_errors|join:', ' }}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="text-sm font-medium text-slate-300">{{ field.label }}</label>
+                    {% if field.help_text %}
+                    <p class="mt-1 text-xs text-slate-500">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    <div class="mt-2">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                    <p class="mt-2 text-xs text-rose-300">{{ field.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/60">Create account</button>
+            </form>
+
+            <p class="mt-6 text-sm text-slate-400">Already onboarded? <a href="{% url 'login' %}" class="font-semibold text-emerald-300 hover:text-emerald-200">Sign in here</a>.</p>
+        </section>
+
+        <section class="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-8 shadow-inner shadow-slate-950/60">
+            <h3 class="text-lg font-semibold text-white">Access checklist</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                    Use a unique password with at least 12 characters and a mix of numbers and symbols.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-blue-400"></span>
+                    Enable multi-factor authentication once your profile is created for enhanced security.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-amber-400"></span>
+                    Ensure your contact email is monitored—alerts and escalations will be routed there.
+                </li>
+            </ul>
+        </section>
+    </div>
+</div>
 {% endblock %}

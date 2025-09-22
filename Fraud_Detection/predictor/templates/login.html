@@ -1,12 +1,57 @@
-<!-- predictor/templates/login.html -->
 {% extends 'base.html' %}
 
+{% block page_heading %}Secure Access{% endblock %}
+
 {% block content %}
-    <h2>Login</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Login">
-    </form>
-    <a href="{% url 'register' %}">Don't have an account? Register here.</a>
+<div class="mx-auto max-w-3xl">
+    <div class="grid gap-8 lg:grid-cols-2">
+        <section class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/40">
+            <h2 class="text-2xl font-semibold text-white">Welcome back</h2>
+            <p class="mt-2 text-sm text-slate-400">Authenticate with your analyst credentials to continue monitoring risk.</p>
+
+            <form method="post" class="mt-8 space-y-5">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="rounded-2xl border border-rose-500/50 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                    {{ form.non_field_errors|join:', ' }}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="text-sm font-medium text-slate-300">{{ field.label }}</label>
+                    <div class="mt-2">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                    <p class="mt-2 text-xs text-rose-300">{{ field.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/60">Sign in</button>
+            </form>
+
+            <p class="mt-6 text-sm text-slate-400">Need an account? <a href="{% url 'register' %}" class="font-semibold text-emerald-300 hover:text-emerald-200">Request analyst access</a>.</p>
+        </section>
+
+        <section class="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-8 shadow-inner shadow-slate-950/60">
+            <h3 class="text-lg font-semibold text-white">Security reminders</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-300">
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-emerald-400"></span>
+                    Use multi-factor authentication when prompted and avoid shared credentials.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-blue-400"></span>
+                    Confirm you are connected to a secure network before reviewing sensitive data.
+                </li>
+                <li class="flex gap-3">
+                    <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full bg-rose-400"></span>
+                    Report suspicious account activity immediately to the security team.
+                </li>
+            </ul>
+        </section>
+    </div>
+</div>
 {% endblock %}
