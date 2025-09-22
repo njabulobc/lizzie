@@ -184,22 +184,38 @@
         <div class="rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/40">
             <h2 class="text-lg font-semibold text-white">Fraud Heatmap by Province</h2>
             <p class="text-sm text-slate-400">Volume of flagged events by geographic region</p>
-            <div class="mt-6 space-y-4">
-                {% if fraud_by_region %}
-                    {% for item in fraud_by_region %}
-                    <div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="font-medium text-slate-200">{{ item.province }}</span>
-                            <span class="text-slate-400">{{ item.count }} cases</span>
+            <div class="mt-6 space-y-5">
+                <div
+                    id="fraudMap"
+                    class="relative h-72 w-full overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-950/60"
+                    role="img"
+                    aria-label="Map of flagged fraud cases by province"
+                    aria-live="polite"
+                >
+                    <p id="fraudMapStatus" class="absolute inset-0 flex items-center justify-center text-center text-sm text-slate-400">
+                        Loading fraud map data…
+                    </p>
+                </div>
+                <div id="fraudMapLegend" class="hidden text-xs text-slate-500" aria-hidden="true">
+                    <p>Cluster size and color intensity reflect relative fraud volume. Larger, warmer clusters indicate more alerts.</p>
+                </div>
+                <div id="fraudMapFallback" class="space-y-4 text-sm text-slate-300" aria-live="polite">
+                    {% if fraud_by_region %}
+                        {% for item in fraud_by_region %}
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-slate-200">{{ item.province }}</span>
+                                <span class="text-slate-400">{{ item.count }} cases</span>
+                            </div>
+                            <div class="mt-2 h-2 rounded-full bg-slate-800">
+                                <div class="h-2 rounded-full bg-rose-400/80" style="width: {{ item.count|percentage:max_fraud_region_count|floatformat:0 }}%;"></div>
+                            </div>
                         </div>
-                        <div class="mt-2 h-2 rounded-full bg-slate-800">
-                            <div class="h-2 rounded-full bg-rose-400/80" style="width: {{ item.count|percentage:max_fraud_region_count|floatformat:0 }}%;"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-6 text-sm text-slate-400">No geographic anomalies detected.</p>
-                {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-6 text-sm text-slate-400">No geographic anomalies detected.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
@@ -227,4 +243,180 @@
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dataHost = document.querySelector('[data-fraud-coordinates]');
+        const mapElement = document.getElementById('fraudMap');
+        const statusElement = document.getElementById('fraudMapStatus');
+        const fallbackElement = document.getElementById('fraudMapFallback');
+        const legendElement = document.getElementById('fraudMapLegend');
+
+        if (mapElement) {
+            mapElement.setAttribute('aria-busy', 'true');
+        }
+
+        const showStatusMessage = message => {
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.classList.remove('hidden');
+                statusElement.removeAttribute('aria-hidden');
+            }
+            if (mapElement) {
+                mapElement.setAttribute('aria-busy', 'false');
+            }
+        };
+
+        if (!dataHost || !mapElement || typeof L === 'undefined') {
+            showStatusMessage('Map unavailable. Showing regional summary instead.');
+            return;
+        }
+
+        const rawDataset = dataHost.dataset.fraudCoordinates;
+        if (!rawDataset) {
+            showStatusMessage('No flagged transactions available to map yet.');
+            return;
+        }
+
+        let parsedPoints;
+        try {
+            parsedPoints = JSON.parse(rawDataset);
+        } catch (error) {
+            console.error('Unable to parse fraud map coordinates:', error);
+            showStatusMessage('Unable to load map data. Showing regional summary instead.');
+            return;
+        }
+
+        if (!Array.isArray(parsedPoints) || parsedPoints.length === 0) {
+            showStatusMessage('No flagged transactions available to map yet.');
+            return;
+        }
+
+        const cleanedPoints = parsedPoints
+            .map(point => {
+                const latitude = typeof point.latitude === 'number' ? point.latitude : parseFloat(point.latitude);
+                const longitude = typeof point.longitude === 'number' ? point.longitude : parseFloat(point.longitude);
+                if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+                    return {
+                        latitude,
+                        longitude,
+                        province: point.province || 'Unknown',
+                    };
+                }
+                return null;
+            })
+            .filter(Boolean);
+
+        if (cleanedPoints.length === 0) {
+            showStatusMessage('Fraud locations are missing coordinates. Showing regional summary instead.');
+            return;
+        }
+
+        const provinceCounts = cleanedPoints.reduce((accumulator, point) => {
+            const provinceKey = point.province;
+            accumulator[provinceKey] = (accumulator[provinceKey] || 0) + 1;
+            return accumulator;
+        }, {});
+
+        const maxProvinceCount = Object.values(provinceCounts).reduce((maxValue, current) => Math.max(maxValue, current), 0) || 1;
+
+        const colorForRatio = ratio => {
+            if (ratio >= 0.66) {
+                return { stroke: '#fb7185', fill: '#fda4af' };
+            }
+            if (ratio >= 0.33) {
+                return { stroke: '#fb923c', fill: '#fed7aa' };
+            }
+            return { stroke: '#34d399', fill: '#bbf7d0' };
+        };
+
+        if (fallbackElement) {
+            fallbackElement.classList.add('hidden');
+            fallbackElement.setAttribute('aria-hidden', 'true');
+        }
+        if (statusElement) {
+            statusElement.classList.add('hidden');
+            statusElement.setAttribute('aria-hidden', 'true');
+        }
+        if (legendElement) {
+            legendElement.classList.remove('hidden');
+            legendElement.removeAttribute('aria-hidden');
+        }
+
+        const map = L.map(mapElement, {
+            scrollWheelZoom: false,
+            attributionControl: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(map);
+
+        const markerCluster = L.markerClusterGroup({
+            showCoverageOnHover: false,
+            spiderfyOnMaxZoom: true,
+            iconCreateFunction: cluster => {
+                const childMarkers = cluster.getAllChildMarkers();
+                const totalCount = cluster.getChildCount();
+                const dominantProvinceCount = childMarkers.reduce(
+                    (largest, marker) => Math.max(largest, marker.options.provinceCount || 1),
+                    0,
+                );
+                const ratio = maxProvinceCount ? Math.min(dominantProvinceCount / maxProvinceCount, 1) : 0;
+                const palette = colorForRatio(ratio);
+                const size = 36 + Math.round(ratio * 18);
+                return L.divIcon({
+                    html: `<div style="background-color:${palette.fill};border:2px solid ${palette.stroke};border-radius:9999px;box-shadow:0 10px 25px rgba(15,23,42,0.35);color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;width:${size}px;height:${size}px;">${totalCount}</div>`,
+                    className: '',
+                    iconSize: [size, size],
+                });
+            },
+        });
+
+        const markerBounds = [];
+
+        cleanedPoints.forEach(point => {
+            const provinceCount = provinceCounts[point.province] || 1;
+            const ratio = Math.min(provinceCount / maxProvinceCount, 1);
+            const palette = colorForRatio(ratio);
+            const marker = L.circleMarker([point.latitude, point.longitude], {
+                radius: 6 + ratio * 6,
+                color: palette.stroke,
+                fillColor: palette.fill,
+                fillOpacity: 0.85,
+                weight: 1.5,
+                provinceCount,
+            });
+
+            const tooltipContent = `${point.province} · ${provinceCount} flagged case${provinceCount === 1 ? '' : 's'}`;
+            marker.bindPopup(`<strong>${point.province}</strong><br>${provinceCount} flagged case${provinceCount === 1 ? '' : 's'}`);
+            marker.bindTooltip(tooltipContent, { direction: 'top' });
+
+            markerCluster.addLayer(marker);
+            markerBounds.push([point.latitude, point.longitude]);
+        });
+
+        markerCluster.addTo(map);
+
+        if (markerBounds.length > 1) {
+            map.fitBounds(markerBounds, { padding: [20, 20] });
+        } else if (markerBounds.length === 1) {
+            map.setView(markerBounds[0], 6);
+        } else {
+            map.setView([0, 0], 2);
+        }
+
+        if (legendElement) {
+            legendElement.setAttribute('role', 'note');
+            legendElement.setAttribute('aria-label', 'Fraud map legend');
+        }
+
+        if (mapElement) {
+            mapElement.setAttribute('aria-busy', 'false');
+        }
+    });
+</script>
 {% endblock %}
