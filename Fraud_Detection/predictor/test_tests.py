@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from predictor.models import Transaction
 from datetime import datetime
+import pytz
 
 class TransactionTests(TestCase):
     def setUp(self):
@@ -20,6 +21,7 @@ class TransactionTests(TestCase):
             unix_time=int(datetime.now().timestamp()),
             merch_latitude=40.7128,
             merch_longitude=-74.0060,
+            processed_at=datetime.now(pytz.UTC),
             is_fraud=False
         )
 
@@ -29,6 +31,7 @@ class TransactionTests(TestCase):
         self.assertEqual(transaction.merchant, "Amazon")
         self.assertEqual(transaction.amt, 1000.00)
         self.assertEqual(transaction.is_fraud, False)
+        self.assertEqual(transaction.fraud_probability, 0.0)
 
     def test_transaction_update(self):
         """Test transaction update"""
@@ -40,5 +43,8 @@ class TransactionTests(TestCase):
     def test_fraud_flag(self):
         """Test fraud flag functionality"""
         self.test_transaction.is_fraud = True
+        self.test_transaction.fraud_probability = 0.85
         self.test_transaction.save()
-        self.assertTrue(Transaction.objects.get(transaction_id=self.test_transaction.transaction_id).is_fraud)
+        updated = Transaction.objects.get(transaction_id=self.test_transaction.transaction_id)
+        self.assertTrue(updated.is_fraud)
+        self.assertAlmostEqual(updated.fraud_probability, 0.85, places=2)
