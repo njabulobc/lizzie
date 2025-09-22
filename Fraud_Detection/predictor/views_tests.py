@@ -5,6 +5,7 @@ from .views import DashboardView
 from .models import Transaction
 from datetime import datetime
 import json
+import pytz
 
 class DashboardViewTests(TestCase):
     def setUp(self):
@@ -29,6 +30,7 @@ class DashboardViewTests(TestCase):
             'unix_time': int(datetime.now().timestamp()),
             'merch_latitude': 0.0,
             'merch_longitude': 0.0,
+            'processed_at': datetime.now(pytz.UTC),
         }
 
     def test_empty_dashboard(self):
@@ -81,3 +83,45 @@ class DashboardViewTests(TestCase):
         self.assertEqual(category_data['Shopping'], 1)
         self.assertEqual(category_data['Food'], 2)
         self.assertEqual(category_data['Travel'], 1)
+
+
+class PredictFraudAPITests(TestCase):
+    def setUp(self):
+        self.url = reverse('predict_fraud')
+        self.base_payload = {
+            'merchant': 'API Shop',
+            'category': 'Electronics',
+            'amt': 250.75,
+            'gender': 'F',
+            'city': 'API City',
+            'province': 'AC',
+            'latitude': 12.34,
+            'longitude': 56.78,
+            'city_pop': 150000,
+            'job': 'Analyst',
+            'unix_time': int(datetime.now().timestamp()),
+            'merch_latitude': 12.30,
+            'merch_longitude': 56.70,
+            'processed_at': datetime.now(pytz.UTC).isoformat(),
+        }
+
+    def test_probability_persisted_and_returned(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.base_payload),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content)
+
+        self.assertIn('probability', payload)
+        self.assertIn('prediction', payload)
+        self.assertIn('top_factors', payload)
+        self.assertIsInstance(payload['top_factors'], list)
+
+        transaction = Transaction.objects.latest('transaction_id')
+        self.assertAlmostEqual(transaction.fraud_probability, payload['probability'], places=4)
+        self.assertEqual(transaction.is_fraud, payload['prediction'])
+        self.assertGreaterEqual(payload['probability'], 0.0)
+        self.assertLessEqual(payload['probability'], 1.0)

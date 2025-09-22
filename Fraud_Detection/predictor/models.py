@@ -31,6 +31,8 @@ class Transaction(models.Model):
     merch_longitude = models.FloatField()
     processed_at = models.DateTimeField(default=datetime.now)
     is_fraud = models.BooleanField(default=False)
+    fraud_probability = models.FloatField(default=0.0)
+    model_version = models.CharField(max_length=64, blank=True, null=True)
 
     def __str__(self):
         return f"{self.merchant} - {self.amt} - {self.is_fraud}"

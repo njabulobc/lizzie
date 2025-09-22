@@ -1,5 +1,4 @@
 # predictor/views.py
-from collections import Counter
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
@@ -13,9 +12,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Transaction
 from .serializers import TransactionSerializer
+from .services.model_insights import generate_model_insights, prepare_prediction_dataframe
 import joblib
 import json
-import pandas as pd
 import os
 
 # Load the trained model
@@ -48,46 +47,26 @@ def predict_fraud(request):
         harare_tz = pytz.timezone('Africa/Harare')
         if transaction.processed_at.tzinfo is None:
             transaction.processed_at = harare_tz.localize(transaction.processed_at)
-            transaction.save()
-        # Prepare the data for prediction
-        transaction_data = serializer.data
-        data = {
-            'merchant': [transaction_data['merchant']],
-            'category': [transaction_data['category']],
-            'amt': [transaction_data['amt']],
-            'gender': [transaction_data['gender']],
-            'city': [transaction_data['city']],
-            'province': [transaction_data['province']],
-            'latitude': [transaction_data['latitude']],
-            'longitude': [transaction_data['longitude']],
-            'city_pop': [transaction_data['city_pop']],
-            'job': [transaction_data['job']],
-            'unix_time': [transaction_data['unix_time']],
-            'merch_latitude': [transaction_data['merch_latitude']],
-            'merch_longitude': [transaction_data['merch_longitude']],
-            'processed_at': [transaction_data['processed_at']]
+            transaction.save(update_fields=['processed_at'])
+
+        transaction_data = TransactionSerializer(transaction).data
+        feature_frame = prepare_prediction_dataframe(transaction_data)
+
+        prediction = model.predict(feature_frame)
+        probability, top_factors = generate_model_insights(model, feature_frame)
+
+        transaction.is_fraud = bool(prediction[0])
+        transaction.fraud_probability = probability
+        model_version = getattr(model, 'model_version', None)
+        transaction.model_version = str(model_version) if model_version is not None else None
+        transaction.save(update_fields=['is_fraud', 'fraud_probability', 'model_version'])
+
+        response_payload = {
+            'prediction': transaction.is_fraud,
+            'probability': transaction.fraud_probability,
+            'top_factors': top_factors,
         }
-        df = pd.DataFrame(data)
-
-        # Extract additional features
-        df['processed_at'] = pd.to_datetime(df['processed_at'])
-        if df['processed_at'].dt.tz is None:
-            df['processed_at'] = df['processed_at'].dt.tz_localize(pytz.UTC)
-        else:
-            df['processed_at'] = df['processed_at'].dt.tz_convert(pytz.UTC)
-        df['hour'] = df['processed_at'].dt.hour
-        df['day_of_week'] = df['processed_at'].dt.dayofweek
-        df['month'] = df['processed_at'].dt.month
-        df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
-        
-        # Drop the 'processed_at' column as it's no longer needed
-        df = df.drop(columns=['processed_at'])
-
-        # Make prediction
-        prediction = model.predict(df)
-        transaction.is_fraud = prediction[0]
-        transaction.save()
-        return Response({'prediction': prediction[0]}, status=status.HTTP_200_OK)
+        return Response(response_payload, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def register(request):
@@ -137,6 +116,20 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
     template_name = 'transaction_detail.html'
     context_object_name = 'transaction'
     pk_url_kwarg = 'transaction_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        transaction = context['transaction']
+
+        try:
+            feature_frame = prepare_prediction_dataframe(transaction)
+            _, top_factors = generate_model_insights(model, feature_frame)
+        except Exception:
+            top_factors = []
+
+        context['top_factors'] = top_factors
+        context['fraud_probability_percent'] = transaction.fraud_probability * 100
+        return context
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
