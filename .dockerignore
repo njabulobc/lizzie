@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+.env
+venv/
+.idea/
+.vscode/
+.git
+.gitignore
+zwg_credit_card_fraud_pipeline.pkl
+zwg_credit_card_fraud_dataset.csv
